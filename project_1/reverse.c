@@ -15,15 +15,16 @@ typedef struct row {
 // parseArgs();
 ROW* readRows(ROW* pFirstListElement, ROW* pLastListElement, FILE*);
 void printText(ROW* pFirstListElement);
-// readFile();
-// writeFile();
+void clearLinkedList(ROW* pLastListElement);
 
     int main(int argc, char *argv[]) {
 
-        printf("!Welcome to Very Useful Text Reversing Program!\n");
+        printf("! Welcome to a Very Useful Text Reversing Program !\n");
 
         // Data stream types for user input or file input:
-        FILE *file;
+        
+        FILE *ptrInputFileHandle;
+        FILE *ptrOutputFileHandle;
 
         char* pTextInput = NULL;
         char* pInputFilename = NULL;
@@ -35,7 +36,7 @@ void printText(ROW* pFirstListElement);
         int args = argc -1;
         
         // DBG
-        printf("Args: %d\n",args);
+        // printf("Args: %d\n",args);
 
         // Check if too many arguments are given:
         if(args>2){
@@ -49,21 +50,28 @@ void printText(ROW* pFirstListElement);
             // Read User Input
             pFirstListElement = readRows(pFirstListElement, pLastListElement, stdin);
             // output = reverseText(input)
+            printf("Reversed Contents: \n");
             printText(pFirstListElement);
-            printf("Case 0\n");
 
             break;
         case 1:
             
             pInputFilename = argv[1];
 
-            // parseArgs(&argv, input_filename)
-            // input = readFile(input_filename)
-            // output = reverseText(input)
-            // printText(output)    
+            printf("Reading a file '%s'\n",pInputFilename);
 
-            pFirstListElement = readRows(pFirstListElement, pLastListElement, file);
-            printf("Input file: %s\n", pInputFilename);
+            // Source for file handling: https://www.geeksforgeeks.org/c/basics-file-handling-c/            
+            ptrInputFileHandle = fopen(pInputFilename, "r");
+
+            pFirstListElement = readRows(pFirstListElement, pLastListElement, ptrInputFileHandle);
+
+            printf("Reading complete!\n");
+            
+            // printf("Reversed File Contents: \n");
+            // printText(pFirstListElement);
+
+            fclose(ptrInputFileHandle);
+
             break;
 
         case 2: 
@@ -71,19 +79,55 @@ void printText(ROW* pFirstListElement);
             pInputFilename = argv[1];
             pOutputFilename = argv[2];
 
-            // parseArgs(&argv, &input_filename, &output_filename)
-            // input = readFile()
-            // output = reverseText(input)
-            // printText(output)
-            // writeFile(output, output_filename)
-            printf("Input file: %s\n", pInputFilename);
-            printf("Output file: %s\n", pOutputFilename);
+            // Source: https://www.geeksforgeeks.org/c/strcmp-in-c/
+            if(!strcmp(pInputFilename, pOutputFilename)){
+                fprintf(stderr, "Input and output file must differ\n");
+                exit(1);
+            }
+
+            // Source for file handling: https://www.geeksforgeeks.org/c/basics-file-handling-c/            
+            ptrInputFileHandle = fopen(pInputFilename, "r");
+            if (ptrInputFileHandle == NULL) {
+                fprintf(stderr, "error: cannot open file '%s'\n", pInputFilename);
+                exit(1);
+            }
+
+            printf("Reading a file '%s'\n",pInputFilename);
+            pFirstListElement = readRows(pFirstListElement, pLastListElement, ptrInputFileHandle);
+            
+            fclose(ptrInputFileHandle);
+            printf("Reading complete!\n");
+            
+            ptrOutputFileHandle = fopen(pOutputFilename, "w");
+            if (ptrOutputFileHandle == NULL){
+                fprintf(stderr, "error: cannot open file 'input.txt'\n");
+                exit(1);
+            }
+
+            ROW* pNextListElement = pFirstListElement;
+
+            printf("Writing to a file '%s'\n",pOutputFilename);
+            while(pNextListElement != NULL){
+                fputs(pNextListElement->ptrRowData, ptrOutputFileHandle);
+                pNextListElement = pNextListElement->ptrNextRow;
+            }
+
+            printf("Writing complete!\n");
+
+            // printf("Reversed File Contents: \n");
+            // printText(pFirstListElement);
+
+            fclose(ptrOutputFileHandle);
+
             break;
 
         default:
             break;
         }
 
+        clearLinkedList(pLastListElement);
+
+        printf("Kiitos ohjelman käytöstä!\n");
         return(0);
     }
  
@@ -113,7 +157,7 @@ int parseArgs(int argv, char* input_filename, char* output_filename){
 */
 
 
-// Sources: 
+// Sources for Reading the Rows: 
 // this blogpost: https://c-for-dummies.com/blog/?p=1112
 // This forum post: https://stackoverflow.com/questions/58667971/c-store-strings-created-by-getline-in-a-linked-list
 // C-programming manual by Uolevi Nikula for implementing the linked list: https://urn.fi/URN:ISBN:978-952-335-685-6 
@@ -187,7 +231,7 @@ ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
         // Source: Uolevi Nikula (link above), I implemented the Uolevi's Example but in an inverted manner where I reverse the list element order for reversed plottign etc.
         // Allocating memory for New Linked List element type of ROW struct:
         if ((pNewListElement = (ROW*)malloc(sizeof(ROW))) == NULL ){
-            fprintf(stderr, "Memory Allocation Failed!");
+            fprintf(stderr, "malloc failed\n");
             exit(1);
         }
 
@@ -247,45 +291,17 @@ void printText(ROW* pFirstListElement){
     return;
 }
 
-/*
-// Case: Input File Argument Given!
-void readFile(char* input_text){
 
-    // Read a file one row by one to an array. Later expand array with malloc!
-    // Increment word count by every row.
-    try:
-        fopen(filename);
-        // Write the reversed text to an output file.
-        while(length(row) != 0):
-            row = stdin(FILE)
+// SOURCE: Uolevi Nikula:
+void clearLinkedList(ROW* pFirstElement){
 
-            input_text.append(row)
-    except:
-        fprintf(stderr, "error: cannot open file 'input.txt'")
-        exit(1)
-    closeFile(filename);
-    return;
+    // This structure for freeing linked list memory is copied from Uolevi Nikula's example:
+    ROW* ptrTemp = pFirstElement;
+    while (ptrTemp != NULL) {
+        pFirstElement = ptrTemp->ptrNextRow;
+        free(ptrTemp);
+        ptrTemp = pFirstElement;
+    }  
+
+    printf("Memory Cleared.\n");
 }
-
-// Reverse the given input text!
-void reverseText(char* input_text, int word_count){
-
-    // Go through the input text array from the end to beginning. Use stored word count as reference. Output the inputted text in reversed order.
-
-    return;
-}
-
-// Case: Input AND output files are given as argument!
-void writeFile(char* reversed_text, int word_count, char* filename){
-
-    openFile(filename);
-    // Write the reversed text to an output file.
-    for i in word_count:
-        stdout(FILE, rows(i))
-
-    closeFile(filename);
-
-    return;
-}
-    
-*/
