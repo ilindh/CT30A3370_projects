@@ -3,29 +3,41 @@
 #include <argp.h>
 #include <string.h>
 
-// Function Declarations
-/* 
-parseArgs();
-readInput();
-printText();
 
-readFile();
-writeFile();
-*/
+// Linked list sturct element:
+typedef struct row {
+    char *ptrRowData;
+    struct row *ptrNextRow;
+
+} ROW;
+
+// Function Declarations
+// parseArgs();
+ROW* readRows(ROW* pFirstListElement, ROW* pLastListElement, FILE*);
+void printText(ROW* pFirstListElement);
+// readFile();
+// writeFile();
 
     int main(int argc, char *argv[]) {
 
-        // printf("Hello World!\n");
+        printf("!Welcome to Very Useful Text Reversing Program!\n");
 
-        char input_text[256];
-        char* pInputFilename;
-        char* pOutputFilename;
+        // Data stream types for user input or file input:
+        FILE *file;
 
-        // If too many arguments are given:
+        char* pTextInput = NULL;
+        char* pInputFilename = NULL;
+        char* pOutputFilename = NULL;
+
+        // Linked list pointers (source: Uolevi Nikula):
+        ROW *pFirstListElement = NULL, *pLastListElement = NULL;
+
         int args = argc -1;
-
+        
+        // DBG
         printf("Args: %d\n",args);
 
+        // Check if too many arguments are given:
         if(args>2){
             fprintf(stderr, "usage: reverse <input> <output>\n");
             exit(1);
@@ -35,9 +47,9 @@ writeFile();
         case 0:
 
             // Read User Input
-            // input = readInput()
+            pFirstListElement = readRows(pFirstListElement, pLastListElement, stdin);
             // output = reverseText(input)
-            // printText(output)
+            printText(pFirstListElement);
             printf("Case 0\n");
 
             break;
@@ -48,7 +60,9 @@ writeFile();
             // parseArgs(&argv, input_filename)
             // input = readFile(input_filename)
             // output = reverseText(input)
-            // printText(output)
+            // printText(output)    
+
+            pFirstListElement = readRows(pFirstListElement, pLastListElement, file);
             printf("Input file: %s\n", pInputFilename);
             break;
 
@@ -65,14 +79,15 @@ writeFile();
             printf("Input file: %s\n", pInputFilename);
             printf("Output file: %s\n", pOutputFilename);
             break;
-            
+
         default:
             break;
         }
 
         return(0);
     }
-/* 
+ 
+/*
 // Source for Argument Parsing: https://stackoverflow.com/questions/9642732/parsing-command-line-arguments-in-c
 int parseArgs(int argv, char* input_filename, char* output_filename){
 
@@ -95,32 +110,144 @@ int parseArgs(int argv, char* input_filename, char* output_filename){
     // Count args and decide what to do after in the switch case:
     return args;
 }
+*/
 
-// Case: No args!
-// Source: https://www.w3schools.com/c/c_user_input.php
-void readInput(void){
+
+// Sources: 
+// this blogpost: https://c-for-dummies.com/blog/?p=1112
+// This forum post: https://stackoverflow.com/questions/58667971/c-store-strings-created-by-getline-in-a-linked-list
+// C-programming manual by Uolevi Nikula for implementing the linked list: https://urn.fi/URN:ISBN:978-952-335-685-6 
+// and man getline:
+/*  DESCRIPTION
+       getline() reads an entire line from stream, storing the address of the buffer containing the text into *lineptr.  The buffer is
+       null-terminated and includes the newline character, if one was found.
+
+       If *lineptr is set to NULL and *n is set 0 before the call, then getline() will allocate a buffer for storing the  line.   This
+       buffer should be freed by the user program even if getline() failed.
+
+       Alternatively,  before  calling getline(), *lineptr can contain a pointer to a malloc(3)-allocated buffer *n bytes in size.  If
+       the buffer is not large enough to hold the line, getline() resizes it with realloc(3), updating *lineptr and *n as necessary.
+
+       In either case, on a successful call, *lineptr and *n will be updated to reflect the buffer address and allocated size  respec‐
+       tively.
+
+       getdelim()  works  like  getline(), except that a line delimiter other than newline can be specified as the delimiter argument.
+       As with getline(), a delimiter character is not added if one was not present in the input before end of file was reached.
+    
+    RETURN VALUE
+       On success, getline() and getdelim() return the number of characters read, including the delimiter character, but not including
+       the terminating null byte ('\0').  This value can be used to handle embedded null bytes in the line read.
+
+       Both  functions  return -1 on failure to read a line (including end-of-file condition).  In the event of an error, errno is set
+       to indicate the cause.
+*/
+
+    /* Uolevi's example:
+    // Source: Uolevi Nikula (link above)
+    if ((pNew = (ASIAKAS*)malloc(sizeof(ASIAKAS))) == NULL ){
+        perror("Muistin varaus epäonnistui");
+        exit(1);
+    }
+    
+    // Uuden alkion jäsenmuuttujien arvojen asettaminen
+    pUusi->iNumero = i; // i on ympärillä olevan silmukan askeltajan arvo
+    pUusi->pSeuraava = NULL;
+    // Uuden alkion lisääminen listaan viimeiseksi alkioksi
+    if (pAlku == NULL) { // lista on tyhjä, joten tehdään ensimmäinen alkio
+        pAlku = pUusi;
+        pLoppu = pUusi;
+    } else { // lista ei ole tyhjä, joten lisätään loppuun
+        pLoppu->pSeuraava = pUusi;
+        pLoppu = pUusi;
+    }
+
+    // Linked list sturct element:
+    typedef struct row {
+        char *ptrRowData;
+        struct row *ptrNextRow;
+        struct row *ptrPrevRow;
+    } ROW;
+    */
+
+ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
 
     // Take in user input from stdin:
-    printf("Tye in your input: \n");
-    fgets(input_text, sizeof(input_text), stdin);
+    // printf("Type in your input: \n");
+    
+    ROW *pNewListElement, *pSecondListElement;
+
+    char *rowTextBuffer = NULL;
+    size_t bufferSize = 0;
+    size_t readCharacters;
+
+    // Each new loop calls the getline()-function which automatically dynamically allocates data for the row and provides a pointer to the data.
+    // This pointer is stored to the linked list as a new element.
+    while((readCharacters = getline(&rowTextBuffer, &bufferSize, type)) != -1){
+        
+        // Source: Uolevi Nikula (link above), I implemented the Uolevi's Example but in an inverted manner where I reverse the list element order for reversed plottign etc.
+        // Allocating memory for New Linked List element type of ROW struct:
+        if ((pNewListElement = (ROW*)malloc(sizeof(ROW))) == NULL ){
+            fprintf(stderr, "Memory Allocation Failed!");
+            exit(1);
+        }
+
+        // Putting the read Row Data to the new Element data pointer:
+        pNewListElement -> ptrRowData = rowTextBuffer;
+        
+        // Putting the New Row Element to the beginning of the Linked List:
+
+        /* In case there is No Elements yet in the List */
+        if(pFirstListElement == NULL){
+            pFirstListElement = pNewListElement;
+            pLastListElement = pNewListElement;
+        
+        /* Put the New Element to First position of the Linked List */
+        /* Linked List Life cycle */
+        /* 1: A (F/L)               */
+        /* 2: A (F), B(L)           */
+        /* 3: A (F), B, C(L)        */
+        /* 3: A (F), B, C, D(L)     */
+        /* List is easily printed from F -> L */
+        /* To automatically order list "backwards"  we have to inject the new element to the first position always */
+        } else {
+            // Store the current first element to second position (temporary pointer):
+            pSecondListElement = pFirstListElement;
+
+            // Put the new row to first position:
+            pFirstListElement = pNewListElement;
+
+            // Put the second element to the new "next-in-line" position
+            pFirstListElement -> ptrNextRow = pSecondListElement;
+        }
+        
+        rowTextBuffer = NULL;
+        bufferSize = 0;
+                
+    }
+
+    // Linked list source: https://urn.fi/URN:ISBN:978-952-335-685-6 
 
     // Save input word count / length. Parse with " " space bars to count only words!
-    return;
+    return pFirstListElement;
 }
 
 // Print out the given text!
-void printText(char* text_array, int word_count){
+void printText(ROW* pFirstListElement){
+
+    ROW *ptrNextElement = pFirstListElement;
 
     // Go through the printed text array and print one row by one:
     // Use the known word count!
-    for i in word_count:
-        fprint(rows(i))
-
+    while(ptrNextElement != NULL){
+        
+        printf("%s", ptrNextElement->ptrRowData);
+        ptrNextElement = ptrNextElement->ptrNextRow;
+    }
+    
     return;
 }
 
-
-/* 
+/*
 // Case: Input File Argument Given!
 void readFile(char* input_text){
 
@@ -160,5 +287,5 @@ void writeFile(char* reversed_text, int word_count, char* filename){
 
     return;
 }
-
+    
 */
