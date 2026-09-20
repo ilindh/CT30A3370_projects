@@ -62,13 +62,16 @@ void clearLinkedList(ROW* pLastListElement);
 
             // Source for file handling: https://www.geeksforgeeks.org/c/basics-file-handling-c/            
             ptrInputFileHandle = fopen(pInputFilename, "r");
-
+            if (ptrInputFileHandle == NULL) {
+                fprintf(stderr, "error: cannot open file '%s'\n", pInputFilename);
+                exit(1);
+            }
             pFirstListElement = readRows(pFirstListElement, pLastListElement, ptrInputFileHandle);
 
             printf("Reading complete!\n");
             
-            // printf("Reversed File Contents: \n");
-            // printText(pFirstListElement);
+            printf("Reversed File Contents: \n");
+            printText(pFirstListElement);
 
             fclose(ptrInputFileHandle);
 
