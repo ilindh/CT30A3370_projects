@@ -24,7 +24,7 @@ void clearLinkedList(ROW* pLastListElement);
         FILE *ptrInputFileHandle;
         FILE *ptrOutputFileHandle;
 
-        char* pTextInput = NULL;
+        // char* pTextInput = NULL;
         char* pInputFilename = NULL;
         char* pOutputFilename = NULL;
 
@@ -147,7 +147,7 @@ ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
 
     // Each new loop calls the getline()-function which automatically dynamically allocates data for the row and provides a pointer to the data.
     // This pointer is stored to the linked list as a new element.
-    while((readCharacters = getline(&rowTextBuffer, &bufferSize, type)) != -1){
+    while((readCharacters = getline(&rowTextBuffer, &bufferSize, type)) != (size_t)-1){
         
         // Source: Uolevi Nikula (link above), I implemented the Uolevi's Example but in an inverted manner where I reverse the list element order for reversed plottign etc.
         // Allocating memory for New Linked List element type of ROW struct:
@@ -189,8 +189,6 @@ ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
         bufferSize = 0;
                 
     }
-
-    // Linked list source: https://urn.fi/URN:ISBN:978-952-335-685-6 
 
     // Save input word count / length. Parse with " " space bars to count only words!
     return pFirstListElement;
