@@ -44,6 +44,8 @@ void clearLinkedList(ROW* pLastListElement);
         case 0:
 
             // Read User Input
+            // Take in user input from stdin:
+            printf("Type in your input: \n");
             pFirstListElement = readRows(pFirstListElement, pLastListElement, stdin);
             // output = reverseText(input)
             printf("Reversed Contents: \n");
@@ -135,9 +137,6 @@ void clearLinkedList(ROW* pLastListElement);
 // and man getline
 
 ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
-
-    // Take in user input from stdin:
-    printf("Type in your input: \n");
     
     ROW *pNewListElement, *pSecondListElement;
 
