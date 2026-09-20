@@ -127,7 +127,7 @@ void clearLinkedList(ROW* pLastListElement);
 
         clearLinkedList(pLastListElement);
 
-        printf("Kiitos ohjelman käytöstä!\n");
+        // printf("Kiitos ohjelman käytöstä!\n");
         return(0);
     }
  
