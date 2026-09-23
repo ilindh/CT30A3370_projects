@@ -8,13 +8,12 @@
 typedef struct row {
     char *ptrRowData;
     struct row *ptrNextRow;
-
 } ROW;
 
 // Function Declarations
-ROW* readRows(ROW* pFirstListElement, ROW* pLastListElement, FILE*);
+ROW* readRows(ROW* pFirstListElement, FILE*);
 void printText(ROW* pFirstListElement);
-void clearLinkedList(ROW* pLastListElement);
+void clearLinkedList(ROW* pFirstListElement);
 
     int main(int argc, char *argv[]) {
 
@@ -29,7 +28,7 @@ void clearLinkedList(ROW* pLastListElement);
         char* pOutputFilename = NULL;
 
         // Linked list pointers:
-        ROW *pFirstListElement = NULL, *pLastListElement = NULL;
+        ROW *pFirstListElement = NULL;
 
         int args = argc -1;
     
@@ -46,7 +45,7 @@ void clearLinkedList(ROW* pLastListElement);
             // Read User Input
             // Take in user input from stdin:
             printf("Type in your input: \n");
-            pFirstListElement = readRows(pFirstListElement, pLastListElement, stdin);
+            pFirstListElement = readRows(pFirstListElement, stdin);
             // output = reverseText(input)
             printf("Reversed Contents: \n");
             printText(pFirstListElement);
@@ -64,7 +63,7 @@ void clearLinkedList(ROW* pLastListElement);
                 fprintf(stderr, "error: cannot open file '%s'\n", pInputFilename);
                 exit(1);
             }
-            pFirstListElement = readRows(pFirstListElement, pLastListElement, ptrInputFileHandle);
+            pFirstListElement = readRows(pFirstListElement, ptrInputFileHandle);
             printf("Reading complete!\n");
             
             printf("Reversed File Contents: \n");
@@ -91,14 +90,14 @@ void clearLinkedList(ROW* pLastListElement);
             }
 
             printf("Reading a file '%s'\n",pInputFilename);
-            pFirstListElement = readRows(pFirstListElement, pLastListElement, ptrInputFileHandle);
+            pFirstListElement = readRows(pFirstListElement, ptrInputFileHandle);
             
             fclose(ptrInputFileHandle);
             printf("Reading complete!\n");
             
             ptrOutputFileHandle = fopen(pOutputFilename, "w");
-            if (ptrOutputFileHandle == NULL){
-                fprintf(stderr, "error: cannot open file 'input.txt'\n");
+            if (ptrInputFileHandle == NULL) {
+                fprintf(stderr, "error: cannot open file '%s'\n", pInputFilename);
                 exit(1);
             }
 
@@ -124,7 +123,7 @@ void clearLinkedList(ROW* pLastListElement);
         }
 
         // Free the LinkedList
-        clearLinkedList(pLastListElement);
+        clearLinkedList(pFirstListElement);
 
         // printf("Kiitos ohjelman käytöstä!\n");
         return(0);
@@ -136,7 +135,7 @@ void clearLinkedList(ROW* pLastListElement);
 // C-programming manual by Uolevi Nikula for implementing the linked list: https://urn.fi/URN:ISBN:978-952-335-685-6 
 // and man getline
 
-ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
+ROW* readRows(ROW *pFirstListElement, FILE *type){
     
     ROW *pNewListElement, *pSecondListElement;
 
@@ -163,7 +162,7 @@ ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
         /* In case there is No Elements yet in the List */
         if(pFirstListElement == NULL){
             pFirstListElement = pNewListElement;
-            pLastListElement = pNewListElement;
+            // pLastListElement = pNewListElement; // Not needed!
         
         /* Put the New Element to First position of the Linked List */
         /* Linked List Life cycle */
@@ -189,7 +188,12 @@ ROW* readRows(ROW *pFirstListElement, ROW *pLastListElement, FILE *type){
                 
     }
 
-    // Save input word count / length. Parse with " " space bars to count only words!
+    // Free the Row Buffer after usage!
+    /** Google Gemini AI was used to debug the code and explained to add this additional free()-command here **/
+    // Also this source was useful: https://stackoverflow.com/questions/75562027/how-to-avoid-memory-leaks-when-using-getline-to-read-from-stdin-in-c
+    // The stackoverflow-source showed that the getline-buffer needs to be freed.
+    // getline()-manual page doesn't regard freeing the memory...
+    free(rowTextBuffer);
     return pFirstListElement;
 }
 
@@ -209,17 +213,23 @@ void printText(ROW* pFirstListElement){
     return;
 }
 
-
-// SOURCE: Uolevi Nikula:
 void clearLinkedList(ROW* pFirstElement){
 
     // This structure for freeing linked list memory is copied from Uolevi Nikula's example:
-    ROW* ptrTemp = pFirstElement;
-    while (ptrTemp != NULL) {
-        pFirstElement = ptrTemp->ptrNextRow;
-        free(ptrTemp);
-        ptrTemp = pFirstElement;
-    }  
+    ROW* ptrCurrent = pFirstElement;
+    ROW* ptrNext = pFirstElement;
 
-    printf("Memory Cleared.\n");
+    /** Google Gemini AI was used to help to understand how to properly free the linked list. **/
+    // Initially I tried to only free the list element, but this left begind the actual data allocated with the getline()-function.
+    // This part was implemented by me, but the cause for memory leak was explained by AI (pointer to the actual data inside the list element is used to free the actual data): 
+    while (ptrCurrent != NULL) {
+        ptrNext = ptrCurrent->ptrNextRow;
+        // We have to free the memory containing the actual data getline() reserved.
+        free(ptrCurrent->ptrRowData);
+        // As well as the ROW-struct element for that data.
+        free(ptrCurrent);
+        ptrCurrent = ptrNext;
+    }
+
+    // printf("Memory Cleared.\n");
 }
